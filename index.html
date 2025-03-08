@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 500px;
+            background: white;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+        .chat-box {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #fff;
+        }
+        .input-box {
+            display: flex;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            background: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container" id="chat-screen">
+        <button onclick="showResponses()">View Responses</button>
+        <div class="chat-box" id="chat-box">
+            <p><strong>Chatbot:</strong> Hello! How can I help you?</p>
+        </div>
+        <div class="input-box">
+            <input type="text" id="user-input" placeholder="Type a message...">
+            <button onclick="sendMessage()">Send</button>
+        </div>
+        <div class="input-box" style="margin-top: 10px;">
+            <input type="text" id="custom-phrase" placeholder="User phrase...">
+            <input type="text" id="custom-response" placeholder="Chatbot response...">
+            <button onclick="addCustomResponse()">Add</button>
+        </div>
+    </div>
+
+    <div class="chat-container hidden" id="responses-screen">
+        <button onclick="showChat()">Back to Chat</button>
+        <h3>Stored Responses</h3>
+        <ul id="responses-list"></ul>
+        <button onclick="exportResponses()">Export Responses</button>
+        <input type="file" id="import-file" accept=".csv" onchange="importResponses(event)">
+        <button onclick="document.getElementById('import-file').click()">Import Responses</button>
+    </div>
+
+    <script>
+        let responses = {
+            "hi": "Hello, I am a chatbot. I don't have an actual brain yet so I can't talk to you like my friends Grok, Gemini, and Chat-GPT would ;(",
+            "hello": "Hello, I am a chatbot. I don't have an actual brain yet so I can't talk to you like my friends Grok, Gemini, and Chat-GPT would ;(",
+            "how are you?": "I'm just a bunch of code, but I'm functioning perfectly! 😊",
+            "what's your name?": "I'm just a simple chatbot! You can give me a name if you like! 🤖",
+            "bye": "Goodbye! Hope to chat with you again soon! 👋"
+        };
+
+        function sendMessage() {
+            let userInput = document.getElementById("user-input").value.toLowerCase().trim();
+            if (userInput === "") return;
+            
+            let chatBox = document.getElementById("chat-box");
+            let userMessage = `<p><strong>You:</strong> ${userInput}</p>`;
+            chatBox.innerHTML += userMessage;
+            
+            document.getElementById("user-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            let botResponse = responses[userInput] || "I'm still learning! 😊";
+            
+            setTimeout(() => {
+                chatBox.innerHTML += `<p><strong>Chatbot:</strong> ${botResponse}</p>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }, 1000);
+        }
+
+        function addCustomResponse() {
+            let phrase = document.getElementById("custom-phrase").value.toLowerCase().trim();
+            let response = document.getElementById("custom-response").value.trim();
+            
+            if (phrase && response) {
+                responses[phrase] = response;
+                alert(`Added response: "${phrase}" -> "${response}"`);
+                document.getElementById("custom-phrase").value = "";
+                document.getElementById("custom-response").value = "";
+            }
+        }
+
+        function showResponses() {
+            document.getElementById("chat-screen").classList.add("hidden");
+            document.getElementById("responses-screen").classList.remove("hidden");
+            let responsesList = document.getElementById("responses-list");
+            responsesList.innerHTML = "";
+            for (let phrase in responses) {
+                responsesList.innerHTML += `<li><strong>${phrase}:</strong> ${responses[phrase]}</li>`;
+            }
+        }
+
+        function showChat() {
+            document.getElementById("responses-screen").classList.add("hidden");
+            document.getElementById("chat-screen").classList.remove("hidden");
+        }
+
+        function exportResponses() {
+            let csvContent = "data:text/csv;charset=utf-8," + Object.entries(responses).map(e => e.join(",")).join("\n");
+            let encodedUri = encodeURI(csvContent);
+            let link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "chatbot_responses.csv");
+            document.body.appendChild(link);
+            link.click();
+        }
+
+        function importResponses(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                let lines = e.target.result.split("\n");
+                lines.forEach(line => {
+                    let [phrase, response] = line.split(",");
+                    if (phrase && response) {
+                        responses[phrase.trim()] = response.trim();
+                    }
+                });
+                alert("Responses imported successfully!");
+                showResponses();
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
